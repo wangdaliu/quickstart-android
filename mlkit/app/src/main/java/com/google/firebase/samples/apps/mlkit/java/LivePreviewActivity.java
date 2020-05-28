@@ -37,7 +37,9 @@ import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.common.annotation.KeepName;
 import com.google.firebase.ml.vision.objects.FirebaseVisionObjectDetectorOptions;
+import com.google.firebase.samples.apps.mlkit.CreditCardChangedListener;
 import com.google.firebase.samples.apps.mlkit.R;
+import com.google.firebase.samples.apps.mlkit.com.google.firebase.samples.apps.mlkit.BarcodeScanningListener;
 import com.google.firebase.samples.apps.mlkit.common.CameraSource;
 import com.google.firebase.samples.apps.mlkit.databinding.ActivityLivePreviewBinding;
 import com.google.firebase.samples.apps.mlkit.java.automl.AutoMLImageLabelerProcessor;
@@ -51,6 +53,8 @@ import com.google.firebase.samples.apps.mlkit.java.objectdetection.ObjectDetecto
 import com.google.firebase.samples.apps.mlkit.common.preference.SettingsActivity;
 import com.google.firebase.samples.apps.mlkit.common.preference.SettingsActivity.LaunchSource;
 import com.google.firebase.samples.apps.mlkit.java.textrecognition.TextRecognitionProcessor;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -68,8 +72,8 @@ public final class LivePreviewActivity extends AppCompatActivity
     private static final String FACE_DETECTION = "Face Detection";
     private static final String OBJECT_DETECTION = "Object Detection";
     private static final String AUTOML_IMAGE_LABELING = "AutoML Vision Edge";
-    private static final String TEXT_DETECTION = "Text Detection";
-    private static final String BARCODE_DETECTION = "Barcode Detection";
+    private static final String TEXT_DETECTION = "Credit Card Detection";
+    private static final String BARCODE_DETECTION = "Drive License Detection";
     private static final String IMAGE_LABEL_DETECTION = "Label Detection";
     private static final String CLASSIFICATION_QUANT = "Classification (quantized)";
     private static final String CLASSIFICATION_FLOAT = "Classification (float)";
@@ -89,15 +93,15 @@ public final class LivePreviewActivity extends AppCompatActivity
         setContentView(binding.getRoot());
 
         List<String> options = new ArrayList<>();
-        options.add(FACE_CONTOUR);
-        options.add(FACE_DETECTION);
-        options.add(AUTOML_IMAGE_LABELING);
-        options.add(OBJECT_DETECTION);
+//        options.add(FACE_CONTOUR);
+//        options.add(FACE_DETECTION);
+//        options.add(AUTOML_IMAGE_LABELING);
+//        options.add(OBJECT_DETECTION);
         options.add(TEXT_DETECTION);
         options.add(BARCODE_DETECTION);
-        options.add(IMAGE_LABEL_DETECTION);
-        options.add(CLASSIFICATION_QUANT);
-        options.add(CLASSIFICATION_FLOAT);
+//        options.add(IMAGE_LABEL_DETECTION);
+//        options.add(CLASSIFICATION_QUANT);
+//        options.add(CLASSIFICATION_FLOAT);
         // Creating adapter for spinner
         ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this, R.layout.spinner_style,
                 options);
@@ -118,6 +122,13 @@ public final class LivePreviewActivity extends AppCompatActivity
         } else {
             getRuntimePermissions();
         }
+    }
+
+    private void reset() {
+        binding.llCard.setVisibility(View.VISIBLE);
+        binding.llBarcode.setVisibility(View.GONE);
+        binding.tvCardNumber.setText("");
+        binding.tvCardExpiry.setText("");
     }
 
     @Override
@@ -179,6 +190,8 @@ public final class LivePreviewActivity extends AppCompatActivity
             cameraSource = new CameraSource(this, binding.fireFaceOverlay);
         }
 
+        reset();
+
         try {
             switch (model) {
                 case CLASSIFICATION_QUANT:
@@ -191,7 +204,21 @@ public final class LivePreviewActivity extends AppCompatActivity
                     break;
                 case TEXT_DETECTION:
                     Log.i(TAG, "Using Text Detector Processor");
-                    cameraSource.setMachineLearningFrameProcessor(new TextRecognitionProcessor());
+                     TextRecognitionProcessor processor = new TextRecognitionProcessor();
+                    cameraSource.setMachineLearningFrameProcessor(processor);
+                    binding.llCard.setVisibility(View.VISIBLE);
+                    binding.llBarcode.setVisibility(View.GONE);
+                    processor.setListener(new CreditCardChangedListener() {
+                        @Override
+                        public void onCardNumberChanged(@NotNull String number) {
+                            binding.tvCardNumber.setText(number);
+                        }
+
+                        @Override
+                        public void onCardExpiryChanged(@NotNull String expiry) {
+                            binding.tvCardExpiry.setText(expiry);
+                        }
+                    });
                     break;
                 case FACE_DETECTION:
                     Log.i(TAG, "Using Face Detector Processor");
@@ -211,7 +238,17 @@ public final class LivePreviewActivity extends AppCompatActivity
                     break;
                 case BARCODE_DETECTION:
                     Log.i(TAG, "Using Barcode Detector Processor");
-                    cameraSource.setMachineLearningFrameProcessor(new BarcodeScanningProcessor());
+                    binding.llCard.setVisibility(View.GONE);
+                    binding.llBarcode.setVisibility(View.VISIBLE);
+                    BarcodeScanningProcessor barcodeScanningProcessor = new  BarcodeScanningProcessor();
+                    cameraSource.setMachineLearningFrameProcessor(barcodeScanningProcessor);
+                    barcodeScanningProcessor.setListener(new BarcodeScanningListener() {
+
+                        @Override
+                        public void onBarcodeScanningChanged(@NotNull String result) {
+                            binding.tvBarcode.setText(result);
+                        }
+                    });
                     break;
                 case IMAGE_LABEL_DETECTION:
                     Log.i(TAG, "Using Image Label Detector Processor");

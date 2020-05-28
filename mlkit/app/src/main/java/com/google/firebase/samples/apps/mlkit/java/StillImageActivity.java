@@ -38,6 +38,7 @@ import android.widget.PopupMenu.OnMenuItemClickListener;
 import android.widget.Spinner;
 
 import com.google.android.gms.common.annotation.KeepName;
+import com.google.firebase.samples.apps.mlkit.CreditCardChangedListener;
 import com.google.firebase.samples.apps.mlkit.R;
 import com.google.firebase.samples.apps.mlkit.common.VisionImageProcessor;
 import com.google.firebase.samples.apps.mlkit.databinding.ActivityStillImageBinding;
@@ -47,6 +48,9 @@ import com.google.firebase.samples.apps.mlkit.java.cloudtextrecognition.CloudDoc
 import com.google.firebase.samples.apps.mlkit.java.cloudtextrecognition.CloudTextRecognitionProcessor;
 import com.google.firebase.samples.apps.mlkit.common.preference.SettingsActivity;
 import com.google.firebase.samples.apps.mlkit.common.preference.SettingsActivity.LaunchSource;
+import com.google.firebase.samples.apps.mlkit.java.textrecognition.TextRecognitionProcessor;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -88,9 +92,10 @@ public final class StillImageActivity extends AppCompatActivity {
   private Integer imageMaxWidth;
   // Max height (portrait mode)
   private Integer imageMaxHeight;
-  private VisionImageProcessor imageProcessor;
+  private CloudTextRecognitionProcessor imageProcessor = new CloudTextRecognitionProcessor();
 
   private ActivityStillImageBinding binding;
+
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -145,6 +150,23 @@ public final class StillImageActivity extends AppCompatActivity {
         tryReloadAndDetectInImage();
       }
     }
+
+      imageProcessor.setListener(new CreditCardChangedListener() {
+          @Override
+          public void onCardNumberChanged(@NotNull String number) {
+              binding.tvCardNumber.setText(number);
+          }
+
+          @Override
+          public void onCardExpiryChanged(@NotNull String expiry) {
+              binding.tvCardExpiry.setText(expiry);
+          }
+      });
+  }
+
+  private void reset() {
+      binding.tvCardNumber.setText("");
+      binding.tvCardExpiry.setText("");
   }
 
   @Override
@@ -176,10 +198,10 @@ public final class StillImageActivity extends AppCompatActivity {
   private void populateFeatureSelector() {
     Spinner featureSpinner = findViewById(R.id.featureSelector);
     List<String> options = new ArrayList<>();
-    options.add(CLOUD_LABEL_DETECTION);
-    options.add(CLOUD_LANDMARK_DETECTION);
+//    options.add(CLOUD_LABEL_DETECTION);
+//    options.add(CLOUD_LANDMARK_DETECTION);
     options.add(CLOUD_TEXT_DETECTION);
-    options.add(CLOUD_DOCUMENT_TEXT_DETECTION);
+//    options.add(CLOUD_DOCUMENT_TEXT_DETECTION);
     // Creating adapter for featureSpinner
     ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this, R.layout.spinner_style, options);
     // Drop down layout style - list view with radio button
@@ -280,6 +302,7 @@ public final class StillImageActivity extends AppCompatActivity {
   }
 
   private void tryReloadAndDetectInImage() {
+      reset();
     try {
       if (imageUri == null) {
         return;
@@ -385,21 +408,21 @@ public final class StillImageActivity extends AppCompatActivity {
   }
 
   private void createImageProcessor() {
-    switch (selectedMode) {
-      case CLOUD_LABEL_DETECTION:
-        imageProcessor = new CloudImageLabelingProcessor();
-        break;
-      case CLOUD_LANDMARK_DETECTION:
-        imageProcessor = new CloudLandmarkRecognitionProcessor();
-        break;
-      case CLOUD_TEXT_DETECTION:
-        imageProcessor = new CloudTextRecognitionProcessor();
-        break;
-      case CLOUD_DOCUMENT_TEXT_DETECTION:
-        imageProcessor = new CloudDocumentTextRecognitionProcessor();
-        break;
-      default:
-        throw new IllegalStateException("Unknown selectedMode: " + selectedMode);
-    }
+//    switch (selectedMode) {
+//      case CLOUD_LABEL_DETECTION:
+//        imageProcessor = new CloudImageLabelingProcessor();
+//        break;
+//      case CLOUD_LANDMARK_DETECTION:
+//        imageProcessor = new CloudLandmarkRecognitionProcessor();
+//        break;
+//      case CLOUD_TEXT_DETECTION:
+//        imageProcessor = new CloudTextRecognitionProcessor();
+//        break;
+//      case CLOUD_DOCUMENT_TEXT_DETECTION:
+//        imageProcessor = new CloudDocumentTextRecognitionProcessor();
+//        break;
+//      default:
+//        throw new IllegalStateException("Unknown selectedMode: " + selectedMode);
+//    }
   }
 }

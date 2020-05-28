@@ -14,15 +14,18 @@
 package com.google.firebase.samples.apps.mlkit.java.barcodescanning;
 
 import android.graphics.Bitmap;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import android.util.Log;
 
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.ml.vision.FirebaseVision;
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode;
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetector;
+import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetectorOptions;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
+import com.google.firebase.samples.apps.mlkit.com.google.firebase.samples.apps.mlkit.BarcodeScanningListener;
 import com.google.firebase.samples.apps.mlkit.common.CameraImageGraphic;
 import com.google.firebase.samples.apps.mlkit.common.FrameMetadata;
 import com.google.firebase.samples.apps.mlkit.common.GraphicOverlay;
@@ -46,7 +49,20 @@ public class BarcodeScanningProcessor extends VisionProcessorBase<List<FirebaseV
         // new FirebaseVisionBarcodeDetectorOptions.Builder()
         //     .setBarcodeFormats(FirebaseVisionBarcode.FORMAT_QR_CODE)
         //     .build();
-        detector = FirebaseVision.getInstance().getVisionBarcodeDetector();
+
+        FirebaseVisionBarcodeDetectorOptions options = new FirebaseVisionBarcodeDetectorOptions.Builder()
+                .setBarcodeFormats(
+                        FirebaseVisionBarcode.FORMAT_ALL_FORMATS
+                )
+                .build();
+
+        detector = FirebaseVision.getInstance().getVisionBarcodeDetector(options);
+    }
+
+    private BarcodeScanningListener listener;
+
+    public void setListener(BarcodeScanningListener listener) {
+        this.listener = listener;
     }
 
     @Override
@@ -76,6 +92,33 @@ public class BarcodeScanningProcessor extends VisionProcessorBase<List<FirebaseV
         }
         for (int i = 0; i < barcodes.size(); ++i) {
             FirebaseVisionBarcode barcode = barcodes.get(i);
+
+            Log.e("barcode type", "=> " + barcode.getValueType());
+
+            if (barcode.getValueType() == FirebaseVisionBarcode.TYPE_DRIVER_LICENSE) {
+                FirebaseVisionBarcode.DriverLicense driverLicense = barcode.getDriverLicense();
+                if (driverLicense != null) {
+                    StringBuilder builder = new StringBuilder();
+                    builder.append("firstName=>" + driverLicense.getFirstName() + "\n");
+                    builder.append("middleName=>" + driverLicense.getMiddleName() + "\n");
+                    builder.append("lastName=>" + driverLicense.getLastName() + "\n");
+                    builder.append("gender=>" + driverLicense.getGender() + "\n");
+                    builder.append("addressCity=>" + driverLicense.getAddressCity() + "\n");
+                    builder.append("addressStreet=>" + driverLicense.getAddressStreet() + "\n");
+                    builder.append("addressState=>" + driverLicense.getAddressState() + "\n");
+                    builder.append("addressZip=>" + driverLicense.getAddressZip() + "\n");
+                    builder.append("birthDate=>" + driverLicense.getBirthDate() + "\n");
+                    builder.append("documentType=>" + driverLicense.getDocumentType() + "\n");
+                    builder.append("licenseNumber=>" + driverLicense.getLicenseNumber() + "\n");
+                    builder.append("expiryDate=>" + driverLicense.getExpiryDate() + "\n");
+                    builder.append("issuingDate=>" + driverLicense.getIssueDate() + "\n");
+                    builder.append("issuingCountry=>" + driverLicense.getIssuingCountry() + "\n");
+
+                    Log.e("Driver license", "" + builder.toString());
+                    listener.onBarcodeScanningChanged(builder.toString());
+                }
+            }
+
             BarcodeGraphic barcodeGraphic = new BarcodeGraphic(graphicOverlay, barcode);
             graphicOverlay.add(barcodeGraphic);
         }

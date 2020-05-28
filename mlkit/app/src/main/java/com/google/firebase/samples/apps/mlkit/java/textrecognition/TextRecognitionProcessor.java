@@ -14,15 +14,18 @@
 package com.google.firebase.samples.apps.mlkit.java.textrecognition;
 
 import android.graphics.Bitmap;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import android.util.Log;
 
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.ml.vision.FirebaseVision;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.google.firebase.ml.vision.text.FirebaseVisionText;
 import com.google.firebase.ml.vision.text.FirebaseVisionTextRecognizer;
+import com.google.firebase.samples.apps.mlkit.CreditCardChangedListener;
+import com.google.firebase.samples.apps.mlkit.com.google.firebase.samples.apps.mlkit.CreditCardUtils;
 import com.google.firebase.samples.apps.mlkit.common.CameraImageGraphic;
 import com.google.firebase.samples.apps.mlkit.common.FrameMetadata;
 import com.google.firebase.samples.apps.mlkit.common.GraphicOverlay;
@@ -39,6 +42,12 @@ public class TextRecognitionProcessor extends VisionProcessorBase<FirebaseVision
     private static final String TAG = "TextRecProc";
 
     private final FirebaseVisionTextRecognizer detector;
+
+    private CreditCardChangedListener listener;
+
+    public void setListener(CreditCardChangedListener listener) {
+        this.listener = listener;
+    }
 
     public TextRecognitionProcessor() {
         detector = FirebaseVision.getInstance().getOnDeviceTextRecognizer();
@@ -72,6 +81,10 @@ public class TextRecognitionProcessor extends VisionProcessorBase<FirebaseVision
         }
         List<FirebaseVisionText.TextBlock> blocks = results.getTextBlocks();
         for (int i = 0; i < blocks.size(); i++) {
+            String block = blocks.get(i).getText();
+
+            CreditCardUtils.INSTANCE.matchCardInfo(listener, block);
+
             List<FirebaseVisionText.Line> lines = blocks.get(i).getLines();
             for (int j = 0; j < lines.size(); j++) {
                 List<FirebaseVisionText.Element> elements = lines.get(j).getElements();

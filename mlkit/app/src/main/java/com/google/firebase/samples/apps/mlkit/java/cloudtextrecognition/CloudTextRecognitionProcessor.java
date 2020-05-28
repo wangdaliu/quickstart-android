@@ -23,6 +23,8 @@ import com.google.firebase.ml.vision.FirebaseVision;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.google.firebase.ml.vision.text.FirebaseVisionText;
 import com.google.firebase.ml.vision.text.FirebaseVisionTextRecognizer;
+import com.google.firebase.samples.apps.mlkit.CreditCardChangedListener;
+import com.google.firebase.samples.apps.mlkit.com.google.firebase.samples.apps.mlkit.CreditCardUtils;
 import com.google.firebase.samples.apps.mlkit.common.FrameMetadata;
 import com.google.firebase.samples.apps.mlkit.common.GraphicOverlay;
 import com.google.firebase.samples.apps.mlkit.java.VisionProcessorBase;
@@ -37,6 +39,12 @@ public class CloudTextRecognitionProcessor extends VisionProcessorBase<FirebaseV
     private static final String TAG = "CloudTextRecProc";
 
     private final FirebaseVisionTextRecognizer detector;
+
+    private CreditCardChangedListener listener;
+
+    public void setListener(CreditCardChangedListener listener) {
+        this.listener = listener;
+    }
 
     public CloudTextRecognitionProcessor() {
         super();
@@ -60,6 +68,10 @@ public class CloudTextRecognitionProcessor extends VisionProcessorBase<FirebaseV
         }
         List<FirebaseVisionText.TextBlock> blocks = text.getTextBlocks();
         for (int i = 0; i < blocks.size(); i++) {
+            String block = blocks.get(i).getText();
+
+            CreditCardUtils.INSTANCE.matchCardInfo(listener, block);
+
             List<FirebaseVisionText.Line> lines = blocks.get(i).getLines();
             for (int j = 0; j < lines.size(); j++) {
                 List<FirebaseVisionText.Element> elements = lines.get(j).getElements();
